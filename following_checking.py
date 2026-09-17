@@ -1,31 +1,45 @@
 import json
+import os
 
-# Load followers
-with open('followers_1.json', 'r', encoding='utf-8') as f:
-    followers_data = json.load(f)
+# Update these paths if your files are named differently (e.g., if you have followers_2.json)
+FOLLOWERS_FILE = 'followers_1.json'
+FOLLOWING_FILE = 'following.json'
 
-# Load following
-with open('following.json', 'r', encoding='utf-8') as f:
-    following_data = json.load(f)
+def extract_usernames(file_path, data_key=None):
+    if not os.path.exists(file_path):
+        print(f"Error: Could not find {file_path}")
+        return set()
+        
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    # If Instagram nested the list inside a main key (like relationships_following)
+    if data_key and isinstance(data, dict) and data_key in data:
+        items = data[data_key]
+    elif isinstance(data, dict):
+        # Fallback if it's a dict but a different key name
+        items = list(data.values())[0]
+    else:
+        # It's already a top-level list (common in modern followers_1.json)
+        items = data
 
-# Extract usernames
-# Note: Instagram's JSON structure usually nests the username inside a string_list_data array
-followers = set()
-for item in followers_data:
-    for string_data in item.get('string_list_data', []):
-        followers.add(string_data.get('value'))
+    usernames = set()
+    for item in items:
+        # Instagram packages user details inside a 'string_list_data' list
+        for entry in item.get('string_list_data', []):
+            username = entry.get('value')
+            if username:
+                usernames.add(username)
+    return usernames
 
-following = set()
-# The following file usually nests items inside a 'relationships_following' key
-following_list = following_data.get('relationships_following', following_data)
-for item in following_list:
-    for string_data in item.get('string_list_data', []):
-        following.add(string_data.get('value'))
+# Extract lists
+followers = extract_usernames(FOLLOWERS_FILE)
+following = extract_usernames(FOLLOWING_FILE, data_key='relationships_following')
 
-# Find people who don't follow you back
+# Compute difference
 not_following_back = following - followers
 
-# Print the results
-print(f"--- {len(not_following_back)} People Not Following You Back ---")
-for username in sorted(not_following_back):
-    print(username)
+# Print summary results
+print(f"\n--- {len(not_following_back)} Accounts Not Following You Back ---")
+for user in sorted(not_following_back):
+    print(user)
