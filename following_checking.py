@@ -36,6 +36,9 @@ def extract_usernames(file_path, data_key=None):
 followers = extract_usernames(FOLLOWERS_FILE)
 following = extract_usernames(FOLLOWING_FILE, data_key='relationships_following')
 
+print(f"Followers found: {len(followers)}")
+print(f"Following found: {len(following)}")
+
 # Compute difference
 not_following_back = following - followers
 
