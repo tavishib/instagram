@@ -1,0 +1,6 @@
+# Ignore the actual Instagram data files
+*.json
+
+# Ignore system files
+.DS_Store
+__pycache__/
