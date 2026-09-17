@@ -9,27 +9,38 @@ def extract_usernames(file_path, data_key=None):
     if not os.path.exists(file_path):
         print(f"Error: Could not find {file_path}")
         return set()
-        
+
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
-    
-    # If Instagram nested the list inside a main key (like relationships_following)
+
     if data_key and isinstance(data, dict) and data_key in data:
         items = data[data_key]
     elif isinstance(data, dict):
-        # Fallback if it's a dict but a different key name
         items = list(data.values())[0]
     else:
-        # It's already a top-level list (common in modern followers_1.json)
         items = data
 
     usernames = set()
     for item in items:
-        # Instagram packages user details inside a 'string_list_data' list
+        username = None
+
+        # Try string_list_data entries first (some exports have 'value' here)
         for entry in item.get('string_list_data', []):
-            username = entry.get('value')
-            if username:
-                usernames.add(username)
+            if entry.get('value'):
+                username = entry['value']
+                break
+            elif entry.get('href'):
+                # Fallback: pull the username out of the profile URL
+                username = entry['href'].rstrip('/').split('/')[-1]
+                break
+
+        # Fallback: some exports put the username in the item's 'title'
+        if not username and item.get('title'):
+            username = item['title']
+
+        if username:
+            usernames.add(username)
+
     return usernames
 
 # Extract lists
