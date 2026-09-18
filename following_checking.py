@@ -1,7 +1,6 @@
 import json
 import os
 
-# Update these paths if your files are named differently (e.g., if you have followers_2.json)
 FOLLOWERS_FILE = 'followers_1.json'
 FOLLOWING_FILE = 'following.json'
 
