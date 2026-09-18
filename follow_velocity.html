@@ -1,0 +1,467 @@
+
+
+Follow velocity · HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Follow Velocity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #F6F5F2;
+    --bg-panel: #FFFFFF;
+    --ink: #16181D;
+    --ink-soft: #5B5F6B;
+    --line: #E3E1DB;
+    --accent-a: #E23D6B;
+    --accent-b: #1FB6A6;
+    --drop-bg: #EFEEE9;
+    --drop-active: #F0DCE1;
+    --shadow: rgba(20, 20, 20, 0.06);
+  }
+ 
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14151A;
+      --bg-panel: #1C1E25;
+      --ink: #F1F1EE;
+      --ink-soft: #9497A3;
+      --line: #2E313C;
+      --accent-a: #FF5D82;
+      --accent-b: #2ED9C3;
+      --drop-bg: #21232C;
+      --drop-active: #33222A;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14151A;
+    --bg-panel: #1C1E25;
+    --ink: #F1F1EE;
+    --ink-soft: #9497A3;
+    --line: #2E313C;
+    --accent-a: #FF5D82;
+    --accent-b: #2ED9C3;
+    --drop-bg: #21232C;
+    --drop-active: #33222A;
+    --shadow: rgba(0, 0, 0, 0.35);
+  }
+ 
+  * { box-sizing: border-box; }
+ 
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+ 
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+ 
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+    line-height: 1.05;
+  }
+ 
+  .accent { color: var(--accent-a); }
+ 
+  .sub {
+    color: var(--ink-soft);
+    font-size: 1.05rem;
+    max-width: 52ch;
+    margin: 0 0 40px;
+  }
+ 
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px var(--shadow);
+  }
+ 
+  .drop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 620px) {
+    .drop-grid { grid-template-columns: 1fr; }
+  }
+ 
+  .dropzone {
+    background: var(--drop-bg);
+    border: 1.5px dashed var(--line);
+    border-radius: 10px;
+    padding: 22px 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .dropzone:hover { border-color: var(--accent-a); }
+  .dropzone.active { background: var(--drop-active); border-color: var(--accent-a); }
+  .dropzone input { display: none; }
+ 
+  .dz-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+  .dz-hint {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+  .dz-file {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--accent-b);
+    font-weight: 500;
+    word-break: break-all;
+  }
+ 
+  button.run {
+    margin-top: 20px;
+    width: 100%;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  button.run:disabled { opacity: 0.35; cursor: not-allowed; }
+  button.run:not(:disabled):hover { opacity: 0.85; }
+ 
+  .status {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 12px;
+    min-height: 1.2em;
+  }
+  .status.error { color: var(--accent-a); }
+ 
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 620px) {
+    .stats-row { grid-template-columns: 1fr; }
+  }
+  .stat {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.9rem;
+  }
+  .stat-label {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+ 
+  .chart-wrap {
+    position: relative;
+    height: 380px;
+  }
+ 
+  .overflow-scroll {
+    overflow-x: auto;
+  }
+ 
+  footer {
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    margin-top: 32px;
+    max-width: 55ch;
+  }
+ 
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+ 
+  <h1>Follow <span class="accent">velocity</span></h1>
+  <p class="sub">See when you followed people, month by month — straight from your Instagram data export. Nothing leaves your browser.</p>
+ 
+  <div class="panel">
+    <div class="drop-grid">
+      <label class="dropzone" id="dz-following">
+        <div class="dz-label">following.json</div>
+        <div class="dz-hint">Required · click or drop file</div>
+        <div class="dz-file" id="dz-following-name"></div>
+        <input type="file" id="input-following" accept="application/json">
+      </label>
+      <label class="dropzone" id="dz-followers">
+        <div class="dz-label">followers_1.json (etc.)</div>
+        <div class="dz-hint">Optional · multiple files OK</div>
+        <div class="dz-file" id="dz-followers-name"></div>
+        <input type="file" id="input-followers" accept="application/json" multiple>
+      </label>
+    </div>
+    <button class="run" id="run-btn" disabled>Chart it</button>
+    <div class="status" id="status"></div>
+  </div>
+ 
+  <div id="results" class="hidden">
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-num" id="stat-following">–</div>
+        <div class="stat-label">accounts followed (timestamped)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-followers">–</div>
+        <div class="stat-label">followers (timestamped)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="stat-busiest">–</div>
+        <div class="stat-label">busiest following month</div>
+      </div>
+    </div>
+ 
+    <div class="panel overflow-scroll">
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+  </div>
+ 
+  <footer>
+    Parsing happens entirely in this page using your browser's JavaScript — your files are never uploaded anywhere. Expects the standard Instagram "Download Your Information" JSON export format.
+  </footer>
+</div>
+ 
+<script>
+(function () {
+  let followingFile = null;
+  let followersFiles = [];
+ 
+  const dzFollowing = document.getElementById('dz-following');
+  const dzFollowers = document.getElementById('dz-followers');
+  const inputFollowing = document.getElementById('input-following');
+  const inputFollowers = document.getElementById('input-followers');
+  const runBtn = document.getElementById('run-btn');
+  const statusEl = document.getElementById('status');
+ 
+  function setupDropzone(dz, input, onFiles) {
+    dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('active'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('active'));
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dz.classList.remove('active');
+      onFiles(e.dataTransfer.files);
+    });
+    input.addEventListener('change', () => onFiles(input.files));
+  }
+ 
+  setupDropzone(dzFollowing, inputFollowing, (files) => {
+    if (files.length) {
+      followingFile = files[0];
+      document.getElementById('dz-following-name').textContent = followingFile.name;
+    }
+    updateRunState();
+  });
+ 
+  setupDropzone(dzFollowers, inputFollowers, (files) => {
+    if (files.length) {
+      followersFiles = Array.from(files);
+      document.getElementById('dz-followers-name').textContent =
+        followersFiles.map(f => f.name).join(', ');
+    }
+    updateRunState();
+  });
+ 
+  function updateRunState() {
+    runBtn.disabled = !followingFile;
+  }
+ 
+  function readFileAsJSON(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try { resolve(JSON.parse(reader.result)); }
+        catch (e) { reject(new Error(`Could not parse ${file.name}: ${e.message}`)); }
+      };
+      reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
+      reader.readAsText(file);
+    });
+  }
+ 
+  // Mirrors the Python parsing logic: handles 'value', 'href', and 'title' username shapes.
+  function extractEntries(data, dataKey) {
+    let items;
+    if (dataKey && data && typeof data === 'object' && !Array.isArray(data) && dataKey in data) {
+      items = data[dataKey];
+    } else if (data && typeof data === 'object' && !Array.isArray(data)) {
+      const listVals = Object.values(data).filter(v => Array.isArray(v));
+      items = listVals.length ? listVals[0] : [];
+    } else {
+      items = data;
+    }
+ 
+    const entries = [];
+    if (!Array.isArray(items)) return entries;
+ 
+    for (const item of items) {
+      if (!item || typeof item !== 'object') continue;
+      let username = null;
+      let timestamp = null;
+ 
+      for (const entry of (item.string_list_data || [])) {
+        if (entry.timestamp) timestamp = entry.timestamp;
+        if (entry.value) { username = entry.value; }
+        else if (entry.href && !username) {
+          const parts = entry.href.replace(/\/$/, '').split('/');
+          username = parts[parts.length - 1];
+        }
+      }
+      if (!username && item.title) username = item.title;
+ 
+      if (username && timestamp) entries.push({ username, timestamp });
+    }
+    return entries;
+  }
+ 
+  function monthlyCounts(entries) {
+    const counts = {};
+    for (const { timestamp } of entries) {
+      const d = new Date(timestamp * 1000);
+      if (isNaN(d.getTime())) continue;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return counts;
+  }
+ 
+  let chartInstance = null;
+ 
+  function renderChart(followingCounts, followersCounts) {
+    const allMonths = Array.from(new Set([
+      ...Object.keys(followingCounts),
+      ...Object.keys(followersCounts)
+    ])).sort();
+ 
+    const rootStyles = getComputedStyle(document.documentElement);
+    const accentA = rootStyles.getPropertyValue('--accent-a').trim();
+    const accentB = rootStyles.getPropertyValue('--accent-b').trim();
+    const inkSoft = rootStyles.getPropertyValue('--ink-soft').trim();
+    const line = rootStyles.getPropertyValue('--line').trim();
+ 
+    const datasets = [{
+      label: 'Accounts followed',
+      data: allMonths.map(m => followingCounts[m] || 0),
+      borderColor: accentA,
+      backgroundColor: accentA,
+      tension: 0.25,
+      pointRadius: 2,
+      borderWidth: 2,
+    }];
+ 
+    if (Object.keys(followersCounts).length) {
+      datasets.push({
+        label: 'New followers',
+        data: allMonths.map(m => followersCounts[m] || 0),
+        borderColor: accentB,
+        backgroundColor: accentB,
+        tension: 0.25,
+        pointRadius: 2,
+        borderWidth: 2,
+      });
+    }
+ 
+    const ctx = document.getElementById('chart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+ 
+    // Chart is at least as wide as ~5px per month so long histories stay legible when scrolled.
+    const canvas = document.getElementById('chart');
+    canvas.style.minWidth = Math.max(600, allMonths.length * 14) + 'px';
+ 
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: { labels: allMonths, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: inkSoft, font: { family: 'Inter' } } },
+        },
+        scales: {
+          x: { ticks: { color: inkSoft, maxRotation: 60, minRotation: 45 }, grid: { color: line } },
+          y: { ticks: { color: inkSoft }, grid: { color: line }, beginAtZero: true },
+        },
+      },
+    });
+  }
+ 
+  runBtn.addEventListener('click', async () => {
+    statusEl.textContent = 'Reading files…';
+    statusEl.classList.remove('error');
+    runBtn.disabled = true;
+ 
+    try {
+      const followingData = await readFileAsJSON(followingFile);
+      const followingEntries = extractEntries(followingData, 'relationships_following');
+ 
+      let followersEntries = [];
+      for (const f of followersFiles) {
+        const data = await readFileAsJSON(f);
+        followersEntries = followersEntries.concat(extractEntries(data, null));
+      }
+ 
+      if (!followingEntries.length) {
+        throw new Error('No timestamped entries found in following.json — check it\'s the right file.');
+      }
+ 
+      const followingCounts = monthlyCounts(followingEntries);
+      const followersCounts = monthlyCounts(followersEntries);
+ 
+      document.getElementById('stat-following').textContent = followingEntries.length.toLocaleString();
+      document.getElementById('stat-followers').textContent = followersEntries.length
+        ? followersEntries.length.toLocaleString() : '–';
+ 
+      const busiestEntry = Object.entries(followingCounts).sort((a, b) => b[1] - a[1])[0];
+      document.getElementById('stat-busiest').textContent = busiestEntry
+        ? `${busiestEntry[0]} (${busiestEntry[1]})` : '–';
+ 
+      renderChart(followingCounts, followersCounts);
+ 
+      document.getElementById('results').classList.remove('hidden');
+      statusEl.textContent = 'Done.';
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.classList.add('error');
+    } finally {
+      runBtn.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
